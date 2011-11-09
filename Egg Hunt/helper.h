@@ -3,35 +3,54 @@ Paul Senatillaka
 Ramon Ramirez
 Helper Function Library
 ***************************************************************************/
-//Sensor Ports Settings
-const int lMotor = 0;
-const int rMotor = 3;
-const int lBumper = 14;
-const int rBumper = 15;
-const int servoSwitch = 3;
-const int servoPump = 1;
 
-//Pump Variables
-const int pumpOn = 345;
-const int pumpOff = 945;
+//****Sensor Ports Settings****
+//Motor Ports
+#define lMotor 0
+#define rMotor 3
+#define trackMotor 1
+//Digital Ports
+#define groundSensor 8
+#define trackLimit 9
+#define lBumper 14
+#define rBumper 15
+//Analog Ports
+#define lLight 0
+#define rLight 1
+#define lDistSensor 2
+#define rDistSensor 3
+//Servo Ports
+#define fGate
+//*****************************
+
+//Light Thresholds
+#define lightThreshHigh 120
+#define lightThreshLow 7
+
+//Dist Thresholds
+#define distThreshold 900
+
 
 //Movement Variables
-const float turnTime = .5;
-const float backupTime = 1;
-const int maxVelocity = 400;
-
-//Color variables
-const int RED = 0;
-const int YELLOW = 1;
-const int GREEN = 2;
-const int BLUE = 3;
+const int maxVelocity = 1000;
 
 //Direction variables
+enum DIRECTION {pointRight, right, diagRight, forward, diagLeft, left, pointLeft, oneEighty, back};
+
+//Color variables
+enum COLOR {PURPLE, YELLOW, BONUS, EXTRA};
+
+//Declerations
+enum STATE {COLLECT, FINDGOAL, DRIVEGOAL, DUMP };
+
+
+/*
 const int right = 1;
 const int diagRight = 2;
 const int forward = 3;
 const int diagLeft = 4;
 const int left = 5;
+*/
 
 /*
 * move()
@@ -39,36 +58,86 @@ const int left = 5;
 * @param: int position - Position state. 1 through 5
 * @param: int velocity - Velocity of moving
 */
-void move(int position, int velocity) {
+void move(enum DIRECTION moveDirection, int velocity) {
 	
-	switch(position) {
+	switch(moveDirection) {
+		
+		//Point Turn Right
+		case 0:
+			mav(lMotor, velocity * .5); 
+			mav(rMotor, -velocity * .5);  
+			#ifdef DEBUG
+				printf("Point Turn Right \n");
+			#endif
+			break;
 		//Right
 		case 1:
-			mav(lMotor, velocity/1.5); //267
-			mav(rMotor, 0);  //80
+			mav(lMotor, velocity * .5); 
+			mav(rMotor, 0);  
+			#ifdef DEBUG
+				printf("Right \n");
+			#endif
 			break;
 		//Diagonal Right
 		case 2:
-			mav(lMotor, velocity);  //400
-			mav(rMotor, velocity/1.5);  //267
-			break;		
+			mav(lMotor, velocity);
+			mav(rMotor, velocity * .25);
+			#ifdef DEBUG
+				printf("Diag Right \n");
+			#endif	
+			break;
 		//Center
 		case 3:
 			mav(lMotor, velocity);  
 			mav(rMotor, velocity);
+			#ifdef DEBUG
+				printf("Center \n");
+			#endif
 			break;		
 		//Diagonal Left
 		case 4:
-			mav(lMotor, velocity/1.5);
+			mav(lMotor, velocity * .25);
 			mav(rMotor, velocity);
+			#ifdef DEBUG
+				printf("Diag Left \n");
+			#endif
 			break;		
 		//Left
-		default:
+		case 5:
 			mav(lMotor, 0);
-			mav(rMotor, velocity/1.5);
+			mav(rMotor, velocity * .5);
+			#ifdef DEBUG
+				printf("Left \n");
+			#endif
 			break;		
+		//Point Turn Left
+		case 6:
+			mav(lMotor, -velocity * .5);
+			mav(rMotor, velocity * .5);
+			#ifdef DEBUG
+				printf("Point Turn Left \n");
+			#endif
+			break;
+		//180 Turns Left
+		case oneEighty:
+			mav(lMotor, -1024 );
+			mav(rMotor, 1024 );
+			sleep(2.4);
+			mav(lMotor, 0);
+			mav(rMotor, 0);
+			break;
+		//Back
+		case back:
+			mav(lMotor, -velocity);
+			mav(rMotor, -velocity);
+			break;
 	}
 
+}
+
+void stopDriving() {
+	mav(lMotor, 0);
+	mav(rMotor, 0);
 }
 
 //If bumpers are hit, moves robot
@@ -78,30 +147,59 @@ void bumperChecknMove() {
 	if(digital(lBumper)) {
 		printf("Left or Both Bumpers Hit!\n");
 		//Backup
-		move(forward, -600);
-		sleep(1);
+		move(back, maxVelocity);
+		sleep(.7);
 		//Move Right
-		mav(lMotor,  300);
-		mav(rMotor, -300);
-		sleep(.5);
-		ao();
+		move(pointRight, maxVelocity);
+		sleep(.4);
+		stopDriving();
 
 	}
 	//If just right bumper is hit
 	else if(digital(rBumper)) {
 		printf("Right Bumper Hit!\n");
 		//Backup
-		move(forward, -600);
-		sleep(1);
+		move(back, maxVelocity);
+		sleep(.7);
 		//Move Left
-		mav(lMotor, -300);
-		mav(rMotor, 300);
-		sleep(.5);
-		ao();
+		move(pointLeft, maxVelocity);
+		sleep(.4);
+		stopDriving();
 	}
 	//No Sensor is Hit
 	else {
-		//Move Forward
-		//moveForward(velocity);
+
 	}
-};
+}
+
+void sideDistCheckMove() {
+	
+	if ( analog10(lDistSensor) > distThreshold ) {
+		move(diagRight, maxVelocity);
+		//sleep(1);	
+		
+		#ifdef DEBUG
+			printf("Left too close \n");
+		#endif
+	}
+	else if ( analog10(rDistSensor) > distThreshold ) { 
+		move(diagLeft, maxVelocity);
+		//sleep(1);	
+		
+		#ifdef DEBUG
+			printf("Right too close \n");
+		#endif
+	}
+	
+}
+
+/**
+int within(int value, int  int range) {
+	
+	if (value 
+
+
+}
+**/	
+
+
