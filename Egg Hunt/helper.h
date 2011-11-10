@@ -6,19 +6,19 @@ Helper Function Library
 
 //****Sensor Ports Settings****
 //Motor Ports
-#define lMotor 0
-#define rMotor 3
+#define lMotor 3
+#define rMotor 0
 #define trackMotor 1
 //Digital Ports
 #define groundSensor 8
 #define trackLimit 9
-#define lBumper 14
-#define rBumper 15
+#define lBumper 15
+#define rBumper 14
 //Analog Ports
-#define lLight 0
-#define rLight 1
-#define lDistSensor 2
-#define rDistSensor 3
+#define lLight 1
+#define rLight 0
+#define lDistSensor 3
+#define rDistSensor 2
 //Servo Ports
 #define fGate 0
 //*****************************
@@ -28,11 +28,11 @@ Helper Function Library
 #define lightThreshLow 7
 
 //Dist Thresholds
-#define distThreshold 900
+#define distThreshold 850
 
 //Gate Servo Settings
 #define GateOpen 60
-#define GateClose 1400
+#define GateClose 1425
 #define GateRightSweep 1900
 #define GateLeftSweep 648
 
@@ -48,14 +48,6 @@ enum COLOR {EXTRA, YELLOW, BONUS, PURPLE};
 //Declerations
 enum STATE {COLLECT, FINDGOAL, DRIVEGOAL, DUMP };
 
-
-/*
-const int right = 1;
-const int diagRight = 2;
-const int forward = 3;
-const int diagLeft = 4;
-const int left = 5;
-*/
 
 /*
 * move()

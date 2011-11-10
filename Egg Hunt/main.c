@@ -11,19 +11,18 @@ Note: Camera Pixel Dimensions: 159 x 119
 Todo:
 -Fix finding home from opponents side
 x-Add code for front closer
+x-Add auto side calibration
 -Stay away from light when not going home
 -Better search when no eggs seen. Currently just spins.
 -When spinning, read side dist sensor to decide which way to turn
-
 -Readjust 180 turn. Actually don't use discrete turns/positioning.
--Add side calibration
+
 **********************************/
 #define DEBUG
 
 #include "helper.h";
 
 //**** Variables ****
-enum COLOR ourEggColor = PURPLE;
 const int numBallsCollect = 3;
 //*******************
 
@@ -32,10 +31,10 @@ int main()
 {
 	
 	//Init Variables
-	float startTime = seconds();
-	enum STATE state = DUMP;
-	int currentEggColor = ourEggColor;
+	enum STATE state = COLLECT;
 	int homeColor; 
+	int currentEggColor;
+	enum COLOR ourEggColor;
 
 	enum DIRECTION lastSeen = forward;
 	int ballCount = 0;
@@ -67,10 +66,16 @@ int main()
 		printf("You're on the White Side!\n");
 	}
 	
+	//Set our initial egg color to go after
+	currentEggColor = ourEggColor;
+	
+	printf("Press A to start Robot /n");
+	
+	//Wait to start program
 	while(!a_button()) { }
 	
-	//Possible Initial Vision Planning
-	
+	//AutoKill in 90 secs
+	shut_down_in(90);
 	
 	
 	while(!black_button()) {
@@ -90,13 +95,13 @@ int main()
 			//Image Capture
 			track_update();
 		
-			//Check for Bonus Eggs
+			/*Check for Bonus Eggs
 			if ( track_count(BONUS) > 0 ) {
 				currentEggColor = BONUS;
 			}
 			else {
 				currentEggColor = ourEggColor;
-			}		
+			}	*/	
 			
 			//Egg Detect
 			if(track_count(currentEggColor) > 0 && track_confidence(currentEggColor, 0) > 40 ) {
@@ -132,6 +137,7 @@ int main()
 					ballCount++;
 					beep();
 					
+					sleep(1);
 					set_servo_position(fGate, GateClose);
 					
 					#ifdef DEBUG
