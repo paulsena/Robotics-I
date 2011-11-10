@@ -342,10 +342,6 @@ int main()
 		sleep (2.5);
 		mav (trackMotor, -900);
 		
-		while (!digital(trackLimit)) {};
-		mav (trackMotor, 0);
-		clear_motor_position_counter(trackMotor);
-		
 		//Bump Eggs with Front Gate
 		move(back, maxVelocity);
 		sleep(.5);
@@ -353,6 +349,13 @@ int main()
 		sleep(.2);
 		move(forward, maxVelocity);
 		sleep(.8);
+		
+		//Checking that track is reset
+		while (!digital(trackLimit)) {};
+		mav (trackMotor, 0);
+		clear_motor_position_counter(trackMotor);
+		
+
 		
 		//Dump finished, move back and turn
 		move(back, maxVelocity);
