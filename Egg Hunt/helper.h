@@ -148,8 +148,27 @@ void stopDriving() {
 	mav(rMotor, 0);
 }
 
-//If bumpers are hit, moves robot
-void bumperChecknMove() {
+
+void sideNBumperCheckMove() {
+	
+	//*******Side Sensoor Logic **********
+	if ( analog10(lDistSensor) > distThreshold ) {
+		#ifdef DEBUG
+			printf("Left too close \n");
+		#endif
+		move(diagRight, maxVelocity);
+		sleep(1);	
+
+	}
+	else if ( analog10(rDistSensor) > distThreshold ) { 
+		#ifdef DEBUG
+			printf("Right too close \n");
+		#endif
+		move(diagLeft, maxVelocity);
+		sleep(1);	
+		
+	}
+	
 	/****** Bumper Logic *******/
 	//If left bumper is hit (or if both sensors are hit)
 	if(digital(lBumper)) {
@@ -173,30 +192,6 @@ void bumperChecknMove() {
 		move(pointLeft, maxVelocity);
 		sleep(.7);
 		stopDriving();
-	}
-	//No Sensor is Hit
-	else {
-
-	}
-}
-
-void sideDistCheckMove() {
-	
-	if ( analog10(lDistSensor) > distThreshold ) {
-		#ifdef DEBUG
-			printf("Left too close \n");
-		#endif
-		move(diagRight, maxVelocity);
-		sleep(1);	
-
-	}
-	else if ( analog10(rDistSensor) > distThreshold ) { 
-		#ifdef DEBUG
-			printf("Right too close \n");
-		#endif
-		move(diagLeft, maxVelocity);
-		sleep(1);	
-		
 	}
 	
 }

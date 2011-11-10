@@ -90,8 +90,7 @@ int main()
 	while(!black_button()) {
 			
 		
-		sideDistCheckMove();
-		bumperChecknMove();
+		start_process(sideNBumperCheckMove);
 		
 		
 		switch(state) {
