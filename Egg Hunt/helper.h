@@ -20,7 +20,7 @@ Helper Function Library
 #define lDistSensor 2
 #define rDistSensor 3
 //Servo Ports
-#define fGate
+#define fGate 0
 //*****************************
 
 //Light Thresholds
@@ -30,6 +30,11 @@ Helper Function Library
 //Dist Thresholds
 #define distThreshold 900
 
+//Gate Servo Settings
+#define GateOpen 60
+#define GateClosed 1400
+#define GateRightSweep 1900
+#define GateLeftSweep 648
 
 //Movement Variables
 const int maxVelocity = 1000;

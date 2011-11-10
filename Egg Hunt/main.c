@@ -10,10 +10,11 @@ Note: Camera Pixel Dimensions: 159 x 119
 
 Todo:
 -Fix finding home from opponents side
+-Add code for front closer
 -Stay away from light when not going home
 -Better search when no eggs seen. Currently just spins.
 -When spinning, read side dist sensor to decide which way to turn
--Add code for front closer
+
 -Readjust 180 turn. Actually don't use discrete turns/positioning.
 -Add side calibration
 **********************************/
@@ -36,10 +37,16 @@ int main()
 	
 	//Init Variables
 	float startTime = seconds();
-	enum STATE state = COLLECT;
+	enum STATE state = DUMP;
+	int currentEggColor = ourEggColor;
 
 	enum DIRECTION lastSeen = forward;
 	int ballCount = 0;
+	int dmpCnt = 0;
+	
+	//Enable our servos
+	enable_servos();
+	set_servo_position(fGate, GateClosed);
 	
 	//Set our Distance Sensors to Float	
 	set_each_analog_state(0,0,1,1,0,0,0,0);
@@ -66,23 +73,30 @@ int main()
 			
 			//Image Capture
 			track_update();
-			
+		
+			//Check for Bonus Eggs
+			if ( track_count(BONUS) > 0 ) {
+				currentEggColor = BONUS;
+			}
+			else {
+				currentEggColor = ourEggColor;
+			}		
 			
 			//Egg Detect
-			if(track_count(ourEggColor) > 0 && track_confidence(ourEggColor, 0) > 40 ) {
+			if(track_count(currentEggColor) > 0 && track_confidence(currentEggColor, 0) > 40 ) {
 				
 				#ifdef DEBUG
-					printf("See our egg %d \n", track_x( ourEggColor, 0));
+					printf("See our egg %d \n", track_x( currentEggColor, 0));
 				#endif
 				
 				//Find out where blobs are
 				//Right
-				if( track_x(ourEggColor, 0) > 115) {
+				if( track_x(currentEggColor, 0) > 115) {
 					move(diagRight, 800);
 					lastSeen = right;
 				}
 				//Left
-				else if( track_x(ourEggColor, 0) < 85 ) {
+				else if( track_x(currentEggColor, 0) < 85 ) {
 					move(diagLeft, 800);
 					lastSeen = left;
 				}
@@ -93,7 +107,7 @@ int main()
 				}
 				
 				//Check if ball is about to go in. 
-				if( track_bbox_top(ourEggColor, 0) > 100) {
+				if( track_bbox_top(currentEggColor, 0) > 100) {
 					//TODO: OPEN GATE
 						
 					sleep(.5);
@@ -270,17 +284,26 @@ int main()
 				clear_motor_position_counter(trackMotor);	
 		}
 		
-		int i;
+		//Open Front Gate
+		set_servo_position(fGate, GateOpen);
 		
-		for (i = 0; i<2; i++) {
+		//Push out Twice
+		for (dmpCnt = 0; dmpCnt<2; dmpCnt++) {
 			//Lets Dump
 			move_to_position (trackMotor, 900, 2350);
-			sleep (3);
+			sleep (2.5);
 			mav (trackMotor, -900);
 			while (!digital(trackLimit)) {};
 			mav (trackMotor, 0);
 			clear_motor_position_counter(trackMotor);
 		}
+		
+		//Sweep Front Gate
+		set_servo_position(fGate, GateRightSweep);
+		sleep(.5);
+		set_servo_position(fGate, GateLeftSweep);
+		sleep(.5);
+		set_servo_position(fGate, GateClosed);
 		
 		//Dump finished, move back and turn
 		move(back, maxVelocity);
