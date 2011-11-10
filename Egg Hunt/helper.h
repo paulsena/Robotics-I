@@ -31,10 +31,10 @@ Helper Function Library
 #define distThreshold 850
 
 //Gate Servo Settings
-#define GateOpen 60
+#define GateOpen 670
 #define GateClose 1425
 #define GateRightSweep 1900
-#define GateLeftSweep 648
+#define GateLeftSweep 848
 
 //Movement Variables
 const int maxVelocity = 1000;
@@ -117,9 +117,20 @@ void move(enum DIRECTION moveDirection, int velocity) {
 			break;
 		//180 Turns Left
 		case oneEighty:
-			mav(lMotor, -1024 );
-			mav(rMotor, 1024 );
-			sleep(2.4);
+				
+			//Find open side before spinning
+			if ( analog10(lDistSensor) > analog10(rDistSensor) ) {
+				//turn left
+				mav(lMotor, -1024 );
+				mav(rMotor, 1024 );
+			}
+			else {
+				//turn right
+				mav(lMotor, 1024 );
+				mav(rMotor, -1024 );
+			}
+
+			sleep(1.9);
 			mav(lMotor, 0);
 			mav(rMotor, 0);
 			break;
@@ -148,7 +159,7 @@ void bumperChecknMove() {
 		sleep(.7);
 		//Move Right
 		move(pointRight, maxVelocity);
-		sleep(.4);
+		sleep(.7);
 		stopDriving();
 
 	}
@@ -160,7 +171,7 @@ void bumperChecknMove() {
 		sleep(.7);
 		//Move Left
 		move(pointLeft, maxVelocity);
-		sleep(.4);
+		sleep(.7);
 		stopDriving();
 	}
 	//No Sensor is Hit
@@ -172,20 +183,20 @@ void bumperChecknMove() {
 void sideDistCheckMove() {
 	
 	if ( analog10(lDistSensor) > distThreshold ) {
-		move(diagRight, maxVelocity);
-		//sleep(1);	
-		
 		#ifdef DEBUG
 			printf("Left too close \n");
 		#endif
+		move(diagRight, maxVelocity);
+		sleep(1);	
+
 	}
 	else if ( analog10(rDistSensor) > distThreshold ) { 
-		move(diagLeft, maxVelocity);
-		//sleep(1);	
-		
 		#ifdef DEBUG
 			printf("Right too close \n");
 		#endif
+		move(diagLeft, maxVelocity);
+		sleep(1);	
+		
 	}
 	
 }

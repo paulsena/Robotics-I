@@ -10,12 +10,20 @@ Note: Camera Pixel Dimensions: 159 x 119
 
 Todo:
 -Fix finding home from opponents side
+-Better search when no eggs seen. Currently just spins last seen.
+-Bonus priority tracking
+-Speedup dumping by backing up while resetting pusher
+
+-Readjust 180 turn. Actually don't use discrete turns/positioning.
+
+Changelog:
 x-Add code for front closer
 x-Add auto side calibration
--Stay away from light when not going home
--Better search when no eggs seen. Currently just spins.
--When spinning, read side dist sensor to decide which way to turn
--Readjust 180 turn. Actually don't use discrete turns/positioning.
+x-Filters on Blob Size now instead of confidence. Should run faster
+x-Stay away from light when not going home
+x-When spinning, read side dist sensor to decide which way to turn
+x-Bump Eggs in when Dumping
+x-Fixed side avoidance
 
 **********************************/
 #define DEBUG
@@ -35,6 +43,7 @@ int main()
 	int homeColor; 
 	int currentEggColor;
 	enum COLOR ourEggColor;
+	int turnDirection;
 
 	enum DIRECTION lastSeen = forward;
 	int ballCount = 0;
@@ -82,7 +91,6 @@ int main()
 			
 		
 		sideDistCheckMove();
-		
 		bumperChecknMove();
 		
 		
@@ -104,7 +112,7 @@ int main()
 			}	*/	
 			
 			//Egg Detect
-			if(track_count(currentEggColor) > 0 && track_confidence(currentEggColor, 0) > 40 ) {
+			if(track_count(currentEggColor) > 0 && track_size(currentEggColor, 0) > 10 ) {
 				
 				#ifdef DEBUG
 					printf("See our egg %d \n", track_x( currentEggColor, 0));
@@ -112,14 +120,14 @@ int main()
 				
 				//Find out where blobs are
 				//Right
-				if( track_x(currentEggColor, 0) > 115) {
+				if( track_x(currentEggColor, 0) > 95) {
 					move(diagRight, 800);
-					lastSeen = right;
+					lastSeen = diagRight;
 				}
 				//Left
-				else if( track_x(currentEggColor, 0) < 85 ) {
+				else if( track_x(currentEggColor, 0) < 65 ) {
 					move(diagLeft, 800);
-					lastSeen = left;
+					lastSeen = diagLeft;
 				}
 				//Forward
 				else {
@@ -128,7 +136,7 @@ int main()
 				}
 				
 				//Check if ball is about to go in. 
-				if( track_bbox_top(currentEggColor, 0) > 100) {
+				if( track_bbox_bottom(currentEggColor, 0) > 110) {
 					
 					//Open Front Gate
 					set_servo_position(fGate, GateOpen);
@@ -137,7 +145,7 @@ int main()
 					ballCount++;
 					beep();
 					
-					sleep(1);
+					sleep(.75);
 					set_servo_position(fGate, GateClose);
 					
 					#ifdef DEBUG
@@ -156,12 +164,21 @@ int main()
 				
 				//Move towards last seen direction
 				move(lastSeen, maxVelocity);
-				sleep(.5);
-				
 			}
-
-			//TODO:
-			//Obstacle Avoidance - Walls/Robots
+			
+			//Avoid End Goals
+			if (analog(lLight) < 9) {
+				#ifdef DEBUG
+					printf("Avoiding goal");
+				#endif
+				move(oneEighty, maxVelocity);
+			} 
+			else if (analog(rLight) < 9) {
+				#ifdef DEBUG
+					printf("Avoiding goal");
+				#endif
+				move(oneEighty, maxVelocity);
+			}
 			
 			if (ballCount >= numBallsCollect) {
 				state = FINDGOAL;
@@ -178,10 +195,18 @@ int main()
 				printf("STATE: FindGoal \n");
 			#endif
 		
+			//Find open side before spinning
+			if ( analog10(lDistSensor) > analog10(rDistSensor) ) {
+				turnDirection = pointLeft;
+			}
+			else {
+				turnDirection = pointRight;
+			}
+		
 			//Spin until either light sensor hits threshold
 			while ( analog(lLight) > lightThreshHigh && analog(rLight) > lightThreshHigh ) {
 				//look for the brightest light
-				move(pointLeft, maxVelocity);
+				move(turnDirection, maxVelocity);
 			}	
 					
 			//Read Ground Value
@@ -257,11 +282,11 @@ int main()
 				int rightValue = analog(rLight);	
 				
 				//Left Sensor Brighter
-				if ( leftValue < rightValue - 20 ) {
+				if ( leftValue < rightValue - 15 ) {
 					move(pointLeft, maxVelocity);
 				}
 				//Right Sensor Brighter
-				else if ( rightValue < leftValue - 20) {
+				else if ( rightValue < leftValue - 15) {
 					move(pointRight, maxVelocity);
 				}
 				//Move Forwards
@@ -281,7 +306,7 @@ int main()
 				#ifdef DEBUG
 					printf("Wrong Side, Turn around \n");
 				#endif
-				//TODO: Calibrate is this turn is a 180
+				
 				move(oneEighty, maxVelocity);
 				move(forward, maxVelocity);
 				sleep(3);
@@ -312,28 +337,27 @@ int main()
 		
 		//Open Front Gate
 		set_servo_position(fGate, GateOpen);
+
+		//Lets Dump
+		move_to_position (trackMotor, 900, 2300);
+		sleep (2.5);
+		mav (trackMotor, -900);
 		
-		//Push out Twice
-		for (dmpCnt = 0; dmpCnt<2; dmpCnt++) {
-			//Lets Dump
-			move_to_position (trackMotor, 900, 2350);
-			sleep (2.5);
-			mav (trackMotor, -900);
-			while (!digital(trackLimit)) {};
-			mav (trackMotor, 0);
-			clear_motor_position_counter(trackMotor);
-		}
+		while (!digital(trackLimit)) {};
+		mav (trackMotor, 0);
+		clear_motor_position_counter(trackMotor);
 		
-		//Sweep Front Gate
-		set_servo_position(fGate, GateRightSweep);
-		sleep(.5);
-		set_servo_position(fGate, GateLeftSweep);
+		//Bump Eggs with Front Gate
+		move(back, maxVelocity);
 		sleep(.5);
 		set_servo_position(fGate, GateClose);
+		sleep(.2);
+		move(forward, maxVelocity);
+		sleep(.8);
 		
 		//Dump finished, move back and turn
 		move(back, maxVelocity);
-		sleep(1);
+		sleep(.5);
 		move(oneEighty, maxVelocity);
 		
 		
