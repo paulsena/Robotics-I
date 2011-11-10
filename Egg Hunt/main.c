@@ -27,7 +27,7 @@ Todo:
 //White Side = 1, Dark Side = 0
 const int homeColor = 0; 
 const int awayColor = 1; 
-enum COLOR ourEggColor = PURPLE;
+const enum COLOR ourEggColor = PURPLE;
 const int numBallsCollect = 3;
 //*******************
 
@@ -46,7 +46,7 @@ int main()
 	
 	//Enable our servos
 	enable_servos();
-	set_servo_position(fGate, GateClosed);
+	set_servo_position(fGate, GateClose);
 	
 	//Set our Distance Sensors to Float	
 	set_each_analog_state(0,0,1,1,0,0,0,0);
@@ -108,11 +108,15 @@ int main()
 				
 				//Check if ball is about to go in. 
 				if( track_bbox_top(currentEggColor, 0) > 100) {
-					//TODO: OPEN GATE
+					
+					//Open Front Gate
+					set_servo_position(fGate, GateOpen);
 						
 					sleep(.5);
 					ballCount++;
 					beep();
+					
+					set_servo_position(fGate, GateClose);
 					
 					#ifdef DEBUG
 					printf("Ball In: %d\n", ballCount);
@@ -303,7 +307,7 @@ int main()
 		sleep(.5);
 		set_servo_position(fGate, GateLeftSweep);
 		sleep(.5);
-		set_servo_position(fGate, GateClosed);
+		set_servo_position(fGate, GateClose);
 		
 		//Dump finished, move back and turn
 		move(back, maxVelocity);

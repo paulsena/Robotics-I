@@ -32,7 +32,7 @@ Helper Function Library
 
 //Gate Servo Settings
 #define GateOpen 60
-#define GateClosed 1400
+#define GateClose 1400
 #define GateRightSweep 1900
 #define GateLeftSweep 648
 
