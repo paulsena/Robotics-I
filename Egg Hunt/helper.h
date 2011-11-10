@@ -38,7 +38,7 @@ const int maxVelocity = 1000;
 enum DIRECTION {pointRight, right, diagRight, forward, diagLeft, left, pointLeft, oneEighty, back};
 
 //Color variables
-enum COLOR {PURPLE, YELLOW, BONUS, EXTRA};
+enum COLOR {EXTRA, YELLOW, BONUS, PURPLE};
 
 //Declerations
 enum STATE {COLLECT, FINDGOAL, DRIVEGOAL, DUMP };
