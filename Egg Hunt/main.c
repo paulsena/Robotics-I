@@ -10,7 +10,7 @@ Note: Camera Pixel Dimensions: 159 x 119
 
 Todo:
 -Fix finding home from opponents side
--Add code for front closer
+x-Add code for front closer
 -Stay away from light when not going home
 -Better search when no eggs seen. Currently just spins.
 -When spinning, read side dist sensor to decide which way to turn
@@ -23,11 +23,7 @@ Todo:
 #include "helper.h";
 
 //**** Variables ****
-//Corrosponds to Top Hat Digital Reading
-//White Side = 1, Dark Side = 0
-const int homeColor = 0; 
-const int awayColor = 1; 
-const enum COLOR ourEggColor = PURPLE;
+enum COLOR ourEggColor = PURPLE;
 const int numBallsCollect = 3;
 //*******************
 
@@ -39,6 +35,7 @@ int main()
 	float startTime = seconds();
 	enum STATE state = DUMP;
 	int currentEggColor = ourEggColor;
+	int homeColor; 
 
 	enum DIRECTION lastSeen = forward;
 	int ballCount = 0;
@@ -55,7 +52,26 @@ int main()
 	//Note: Pusher should always be set in the back position on start
 	clear_motor_position_counter(trackMotor);
 	
+	//Calibration
+	printf("Place Robot down on side and Press A! \n");
+	while(!a_button()) { }
+	
+	if (digital(groundSensor) == 0) {
+		ourEggColor = PURPLE;
+		homeColor = 0;  //Black
+		printf("You're on the Black Side!\n");
+	}
+	else {
+		ourEggColor = YELLOW;
+		homeColor = 1; //White
+		printf("You're on the White Side!\n");
+	}
+	
+	while(!a_button()) { }
+	
 	//Possible Initial Vision Planning
+	
+	
 	
 	while(!black_button()) {
 			

@@ -198,13 +198,3 @@ void sideDistCheckMove() {
 	
 }
 
-/**
-int within(int value, int  int range) {
-	
-	if (value 
-
-
-}
-**/	
-
-
