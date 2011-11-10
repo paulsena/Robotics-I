@@ -12,8 +12,10 @@ Helper Function Library
 //Digital Ports
 #define groundSensor 8
 #define trackLimit 9
-#define lBumper 15
-#define rBumper 14
+#define lBumper 13
+#define rBumper 12
+#define flBumper 15
+#define frBumper 14
 //Analog Ports
 #define lLight 1
 #define rLight 0
@@ -170,8 +172,23 @@ void sideNBumperCheckMove() {
 	}
 	
 	/****** Bumper Logic *******/
-	//If left bumper is hit (or if both sensors are hit)
+	
+	//Left is hit
 	if(digital(lBumper)) {
+		move(back, maxVelocity);
+		sleep(.75);
+		move(pointRight, maxVelocity);
+		sleep(1);
+	}
+	//Right is hit
+	else if(digital(rBumper)) {
+		move(back, maxVelocity);
+		sleep(.75);
+		move(pointLeft, maxVelocity);
+		sleep(1);
+	}
+	//If front left bumper is hit
+	else if(digital(flBumper) && !digital(frBumper)) {
 		printf("Left or Both Bumpers Hit!\n");
 		//Backup
 		move(back, maxVelocity);
@@ -182,8 +199,8 @@ void sideNBumperCheckMove() {
 		stopDriving();
 
 	}
-	//If just right bumper is hit
-	else if(digital(rBumper)) {
+	//If just front right bumper is hit
+	else if(digital(frBumper) && !digital(flBumper)) {
 		printf("Right Bumper Hit!\n");
 		//Backup
 		move(back, maxVelocity);
@@ -192,6 +209,23 @@ void sideNBumperCheckMove() {
 		move(pointLeft, maxVelocity);
 		sleep(.7);
 		stopDriving();
+	}
+	//Both front are hit
+	else if(digital(frBumper) && digital(frBumper)) {
+		move(back, maxVelocity);
+		sleep(1);
+		//Find open side before spinning
+		//TODO: We could check if we're really close to a wall and turn differently here, so our back doesnt hit
+		if ( analog10(lDistSensor) < analog10(rDistSensor) ) {
+			//turn left
+			mav(lMotor, -1024 );
+			mav(rMotor, 1024 );
+		}
+		else {
+			//turn right
+			mav(lMotor, 1024 );
+			mav(rMotor, -1024 );
+		}
 	}
 	
 }

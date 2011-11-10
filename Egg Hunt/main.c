@@ -12,7 +12,8 @@ Todo:
 -Fix finding home from opponents side
 -Better search when no eggs seen. Currently just spins last seen.
 -Bonus priority tracking
--Speedup dumping by backing up while resetting pusher
+-Return home with low time and if atleast 1 ball
+-Use Position or Accelorometer to test if we're stuck. Use process.
 
 -Readjust 180 turn. Actually don't use discrete turns/positioning.
 
@@ -24,6 +25,7 @@ x-Stay away from light when not going home
 x-When spinning, read side dist sensor to decide which way to turn
 x-Bump Eggs in when Dumping
 x-Fixed side avoidance
+x-Speedup dumping by backing up while resetting pusher
 
 **********************************/
 #define DEBUG
